@@ -277,7 +277,7 @@ launchctl load ~/Library/LaunchAgents/com.aurasafe.plist
 
 ```json
 {
-  "pin": "1234",
+  "pin": "Your_PIN",
 
   "api": {
     "host": "127.0.0.1",
