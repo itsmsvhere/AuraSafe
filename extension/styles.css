@@ -1,0 +1,90 @@
+/* AuraSafe — styles.css
+   Content script injected styles for blur, masking, full block overlay.
+   All selectors prefixed with `aura-` to avoid collision.
+*/
+
+/* ── Blurred media ─────────────────────────────────────────────────────────── */
+.aura-blur {
+  filter: blur(22px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  transition: filter 0.15s ease !important;
+}
+
+/* ── Media wrapper (positions the label over blurred media) ─────────────────── */
+.aura-media-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.aura-media-label {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background: rgba(10, 10, 20, 0.88) !important;
+  color: #FF4444 !important;
+  font-family: "Segoe UI", system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+  border: 1px solid rgba(255, 68, 68, 0.4) !important;
+}
+
+/* ── Blocked text spans ────────────────────────────────────────────────────── */
+[data-aura-safe] {
+  background: #1a0a0a !important;
+  color: #1a0a0a !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+  font-family: monospace !important;
+  cursor: help !important;
+  letter-spacing: 1px !important;
+  user-select: none !important;
+}
+
+[data-aura-safe]:hover {
+  background: #2a0a0a !important;
+  color: #ff4444aa !important;
+}
+
+/* ── Fullscreen block overlay ──────────────────────────────────────────────── */
+#aura-fullblock {
+  position: fixed !important;
+  inset: 0 !important;
+  background: #0d0d0d !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: "Segoe UI", system-ui, sans-serif !important;
+}
+
+.aura-fb-inner {
+  text-align: center !important;
+  padding: 48px !important;
+}
+
+.aura-fb-icon {
+  font-size: 72px !important;
+  margin-bottom: 16px !important;
+}
+
+.aura-fb-title {
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  color: #FF4444 !important;
+  letter-spacing: 3px !important;
+  margin-bottom: 12px !important;
+}
+
+.aura-fb-reason {
+  font-size: 15px !important;
+  color: #777 !important;
+  max-width: 420px !important;
+  line-height: 1.6 !important;
+}

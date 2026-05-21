@@ -1,0 +1,44 @@
+{
+  "version": "2.0",
+  "api": {
+    "host": "127.0.0.1",
+    "port": 5000
+  },
+  "pin": "1234",
+  "detection": {
+    "case_sensitive": false,
+    "normalize": true,
+    "english_keywords": [
+      "porn", "xxx", "nude", "naked", "nsfw", "sex", "adult content",
+      "hate", "kill", "murder", "rape", "drug", "cocaine", "heroin",
+      "gambling", "bet now", "casino", "self harm", "suicide",
+      "explicit", "18+", "escort", "onlyfans"
+    ],
+    "tamil_keywords": [
+      "ஆபாசம்", "வன்முறை", "கொலை", "போதை", "சூதாட்டம்"
+    ],
+    "tanglish_keywords": [
+      "punda", "otha", "koothi", "sunni", "sappi", "thevidiya",
+      "loosu", "thevdiya", "naaye", "poda", "thayoli"
+    ]
+  },
+  "restricted_apps": [
+    "steam.exe", "epicgameslauncher.exe", "leagueoflegends.exe",
+    "vlc.exe", "mpc-hc64.exe", "potplayer.exe"
+  ],
+  "overlay": {
+    "warning_color": "#FF4444",
+    "block_color": "#1a0a0a",
+    "opacity": 0.95,
+    "font": "Segoe UI"
+  },
+  "logging": {
+    "db_path": "aurasafe_logs.db",
+    "max_entries": 10000
+  },
+  "wellness": {
+    "focus_mode_default_minutes": 25,
+    "break_minutes": 5
+  },
+  "monitor_interval_ms": 500
+}

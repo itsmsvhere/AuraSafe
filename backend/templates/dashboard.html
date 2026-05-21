@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AuraSafe — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── RESET + BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:      #0a0a14;
+  --bg2:     #0f0f1e;
+  --bg3:     #141428;
+  --border:  rgba(255,68,68,0.15);
+  --red:     #FF4444;
+  --red2:    #cc2222;
+  --cyan:    #4FC3F7;
+  --green:   #4CAF50;
+  --yellow:  #FFC107;
+  --text:    #e0e0e0;
+  --text2:   #888;
+  --text3:   #555;
+  --sidebar: 220px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;font-size:14px;}
+a{color:inherit;text-decoration:none;}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-brand{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.brand-icon{font-size:28px;}
+.brand-name{font-size:18px;font-weight:800;color:var(--red);letter-spacing:1px;}
+.brand-ver{font-size:10px;color:var(--text3);margin-top:2px;}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+.nav-section{padding:8px 20px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all .15s;color:var(--text2);
+  font-size:13px;
+}
+.nav-item:hover{background:rgba(255,68,68,0.06);color:var(--text);}
+.nav-item.active{background:rgba(255,68,68,0.1);border-left-color:var(--red);color:var(--red);}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-status{
+  padding:16px 20px;
+  border-top:1px solid var(--border);
+}
+.status-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:6px;
+  background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);
+  font-size:12px;color:var(--green);
+}
+.status-badge.offline{background:rgba(255,68,68,0.1);border-color:rgba(255,68,68,0.2);color:var(--red);}
+.status-badge.blocked{background:rgba(255,68,68,0.15);border-color:var(--red);color:var(--red);animation:pulse 1s infinite;}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{
+  padding:16px 28px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);flex-shrink:0;
+}
+.topbar-title{font-size:18px;font-weight:700;color:var(--text);}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
+.btn{
+  padding:8px 16px;border:none;border-radius:6px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  letter-spacing:.5px;transition:all .15s;
+}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{background:var(--red2);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-success:hover{filter:brightness(.9);}
+.content{flex:1;overflow-y:auto;padding:24px 28px;}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:20px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;right:0;
+  width:60px;height:60px;border-radius:0 10px 0 100%;
+  opacity:.15;
+}
+.stat-card.red::before{background:var(--red);}
+.stat-card.cyan::before{background:var(--cyan);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.yellow::before{background:var(--yellow);}
+.stat-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.stat-value{font-size:32px;font-weight:800;line-height:1;}
+.stat-card.red .stat-value{color:var(--red);}
+.stat-card.cyan .stat-value{color:var(--cyan);}
+.stat-card.green .stat-value{color:var(--green);}
+.stat-card.yellow .stat-value{color:var(--yellow);}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* ── CHARTS ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:20px;
+}
+.chart-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+.chart-wrap{position:relative;height:200px;}
+
+/* ── LOGS TABLE ── */
+.section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.logs-table{width:100%;border-collapse:collapse;}
+.logs-table th{
+  text-align:left;padding:10px 14px;
+  font-size:10px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1px;
+  border-bottom:1px solid var(--border);
+}
+.logs-table td{
+  padding:10px 14px;font-size:12px;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  color:var(--text2);
+}
+.logs-table tr:hover td{background:rgba(255,255,255,.02);}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;
+}
+.badge-block{background:rgba(255,68,68,.15);color:var(--red);}
+.badge-warn{background:rgba(255,193,7,.15);color:var(--yellow);}
+.badge-lock{background:rgba(79,195,247,.15);color:var(--cyan);}
+.badge-sys{background:rgba(255,255,255,.08);color:var(--text3);}
+
+/* ── SETTINGS ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.settings-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:24px;
+}
+.settings-card h3{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.form-input{
+  width:100%;padding:9px 12px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:13px;
+  outline:none;transition:border-color .15s;
+}
+.form-input:focus{border-color:var(--red);}
+.form-textarea{
+  width:100%;padding:9px 12px;min-height:100px;resize:vertical;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:12px;
+  font-family:monospace;outline:none;transition:border-color .15s;
+}
+.form-textarea:focus{border-color:var(--red);}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.toggle-label{font-size:13px;color:var(--text2);}
+.toggle{
+  width:40px;height:22px;background:var(--text3);
+  border-radius:11px;cursor:pointer;position:relative;
+  transition:background .2s;
+}
+.toggle.on{background:var(--red);}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:18px;height:18px;border-radius:50%;background:#fff;
+  transition:left .2s;
+}
+.toggle.on::after{left:20px;}
+
+/* ── FOCUS MODE ── */
+.focus-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:28px;text-align:center;
+  max-width:500px;margin:0 auto;
+}
+.focus-timer{font-size:56px;font-weight:800;color:var(--cyan);letter-spacing:2px;margin:16px 0;}
+.focus-status{font-size:13px;color:var(--text3);margin-bottom:24px;}
+.focus-btns{display:flex;gap:12px;justify-content:center;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .charts-grid{grid-template-columns:1fr;}
+  .settings-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .sidebar{display:none;}
+  .stats-grid{grid-template-columns:1fr;}
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <div class="brand-name">AURASAFE</div>
+        <div class="brand-ver">v2.5 · Local Safety Engine</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="logs">
+        <span class="nav-icon">📋</span> Event Logs
+      </div>
+      <div class="nav-item" data-page="analytics">
+        <span class="nav-icon">📈</span> Analytics
+      </div>
+
+      <div class="nav-section">Controls</div>
+      <div class="nav-item" data-page="focus">
+        <span class="nav-icon">🔒</span> Focus Mode
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-status">
+      <div class="status-badge" id="sidebarStatus">
+        <div class="dot"></div>
+        <span id="sidebarStatusText">Checking…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-sub" id="topbarSub">Real-time safety monitoring</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="exportLogs()">⬇ Export Logs</button>
+        <button class="btn btn-danger" id="btnBlock" onclick="manualBlock()">⛔ Force Block</button>
+        <button class="btn btn-success" id="btnUnblock" onclick="manualUnblock()">✅ Unblock</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card red">
+            <div class="stat-label">Total Blocked</div>
+            <div class="stat-value" id="statBlocked">—</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-label">Warnings</div>
+            <div class="stat-value" id="statWarns">—</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card cyan">
+            <div class="stat-label">Focus Sessions</div>
+            <div class="stat-value" id="statLocks">—</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Engine Status</div>
+            <div class="stat-value" id="statStatus" style="font-size:18px;margin-top:6px;">—</div>
+            <div class="stat-sub" id="statLastEvent">—</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">Events Today</div>
+            <div class="chart-wrap"><canvas id="chartToday"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Event Types</div>
+            <div class="chart-wrap"><canvas id="chartTypes"></canvas></div>
+          </div>
+        </div>
+
+        <div class="section-title">Recent Events</div>
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Time</th><th>Type</th><th>Content</th><th>Action</th><th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="recentLogs"></tbody>
+        </table>
+      </div>
+
+      <!-- LOGS PAGE -->
+      <div class="page" id="page-logs">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="section-title" style="margin-bottom:0;">All Event Logs</div>
+          <select id="logFilter" class="form-input" style="width:160px;" onchange="loadLogs()">
+            <option value="">All Types</option>
+            <option value="BLOCK">Block</option>
+            <option value="DETECTION">Detection</option>
+            <option value="FOCUS_LOCK">Focus Lock</option>
+            <option value="SYSTEM">System</option>
+          </select>
+        </div>
+        <table class="logs-table">
+          <thead>
+            <tr><th>Time</th><th>Type</th><th>Content</th><th>Action</th><th>Source</th></tr>
+          </thead>
+          <tbody id="allLogs"></tbody>
+        </table>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="chart-card">
+            <div class="chart-title">Weekly Activity</div>
+            <div class="chart-wrap"><canvas id="chartWeekly"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Detection Languages</div>
+            <div class="chart-wrap"><canvas id="chartLang"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Hourly Pattern</div>
+            <div class="chart-wrap"><canvas id="chartHourly"></canvas></div>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:20px;margin-top:8px;">
+          <div class="chart-title">30-Day Trend</div>
+          <div class="chart-wrap" style="height:240px;"><canvas id="chart30d"></canvas></div>
+        </div>
+      </div>
+
+      <!-- FOCUS MODE PAGE -->
+      <div class="page" id="page-focus">
+        <div class="focus-card">
+          <div style="font-size:48px;margin-bottom:8px;">🔒</div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--cyan);">Focus Mode</h2>
+          <p style="color:var(--text3);margin-top:8px;margin-bottom:24px;">Lock the screen and block all distractions for a set duration.</p>
+          <div class="form-group">
+            <label class="form-label">Duration (minutes)</label>
+            <input type="number" class="form-input" id="focusDuration" value="25" min="1" max="180" style="text-align:center;font-size:20px;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason / Session Label</label>
+            <input type="text" class="form-input" id="focusReason" placeholder="e.g. Study session, Deep work…">
+          </div>
+          <div class="focus-timer" id="focusTimer">25:00</div>
+          <div class="focus-status" id="focusStatus">Ready to start</div>
+          <div class="focus-btns">
+            <button class="btn btn-success" id="btnStartFocus" onclick="startFocus()">▶ Start Focus</button>
+            <button class="btn btn-danger" id="btnStopFocus" onclick="stopFocus()" disabled>⏹ Stop</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>🔑 Security</h3>
+            <div class="form-group">
+              <label class="form-label">Unlock PIN</label>
+              <input type="password" class="form-input" id="setPIN" placeholder="Enter new PIN">
+            </div>
+            <div class="form-group">
+              <label class="form-label">API Port</label>
+              <input type="number" class="form-input" id="setPort" value="5000">
+            </div>
+            <button class="btn btn-danger" onclick="saveSettings()">Save Settings</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>🛡️ Detection</h3>
+            <div class="toggle-row">
+              <span class="toggle-label">Case Sensitive</span>
+              <div class="toggle" id="toggleCase" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Normalize Text</span>
+              <div class="toggle on" id="toggleNorm" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">App Monitoring</span>
+              <div class="toggle on" id="toggleApps" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3>📝 Keywords</h3>
+            <div class="form-group">
+              <label class="form-label">English Keywords (one per line)</label>
+              <textarea class="form-textarea" id="kwEnglish"></textarea>
+            </div>
+            <button class="btn btn-ghost" onclick="loadKeywords()">↺ Load</button>
+            <button class="btn btn-danger" style="margin-left:8px;" onclick="saveKeywords()">Save Keywords</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>📝 Tanglish / Tamil</h3>
+            <div class="form-group">
+              <label class="form-label">Tanglish Keywords</label>
+              <textarea class="form-textarea" id="kwTanglish"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tamil Keywords</label>
+              <textarea class="form-textarea" id="kwTamil"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+const API = "http://127.0.0.1:5000";
+let charts = {};
+let focusInterval = null;
+let focusSeconds  = 0;
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    item.classList.add('active');
+    const page = item.dataset.page;
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('topbarTitle').textContent = item.textContent.trim();
+    if (page === 'logs')      loadLogs();
+    if (page === 'analytics') loadAnalytics();
+    if (page === 'settings')  loadSettings();
+  });
+});
+
+// ── STATUS POLLING ─────────────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const r = await fetch(`${API}/status`);
+    const d = await r.json();
+    updateStatusUI(d);
+  } catch(e) {
+    updateStatusUI(null);
+  }
+}
+
+function updateStatusUI(d) {
+  const badge = document.getElementById('sidebarStatus');
+  const txt   = document.getElementById('sidebarStatusText');
+  const stat  = document.getElementById('statStatus');
+  const last  = document.getElementById('statLastEvent');
+
+  if (!d) {
+    badge.className = 'status-badge offline';
+    txt.textContent = 'Backend offline';
+    stat.textContent = '⚫ OFFLINE';
+    stat.style.color = '#555';
+    return;
+  }
+
+  if (d.blocked) {
+    badge.className = 'status-badge blocked';
+    txt.textContent = 'BLOCKED';
+    stat.textContent = '🔴 BLOCKED';
+    stat.style.color = 'var(--red)';
+  } else {
+    badge.className = 'status-badge';
+    txt.textContent = 'All Clear';
+    stat.textContent = '🟢 ACTIVE';
+    stat.style.color = 'var(--green)';
+  }
+
+  last.textContent = d.last_event || 'none';
+}
+
+// ── STATS ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/stats`);
+    const d = await r.json();
+    document.getElementById('statBlocked').textContent = (d.BLOCK || 0) + (d.APP_BLOCKED || 0);
+    document.getElementById('statWarns').textContent   = d.DETECTION || 0;
+    document.getElementById('statLocks').textContent   = d.FOCUS_LOCK || 0;
+    drawTodayChart(d);
+    drawTypesChart(d);
+  } catch(e) {}
+}
+
+// ── RECENT LOGS ────────────────────────────────────────────────────────────
+async function loadRecentLogs() {
+  try {
+    const r = await fetch(`${API}/logs?limit=10`);
+    const d = await r.json();
+    renderLogs(d.logs, 'recentLogs');
+  } catch(e) {}
+}
+
+async function loadLogs() {
+  const filter = document.getElementById('logFilter')?.value || '';
+  const url = filter ? `${API}/logs?limit=100&type=${filter}` : `${API}/logs?limit=100`;
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    renderLogs(d.logs, 'allLogs');
+  } catch(e) {}
+}
+
+function renderLogs(logs, targetId) {
+  const tb = document.getElementById(targetId);
+  if (!tb) return;
+  if (!logs || !logs.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;">No events yet</td></tr>';
+    return;
+  }
+  tb.innerHTML = logs.map(l => {
+    const t = l.timestamp ? l.timestamp.replace('T',' ').substring(0,19) : '—';
+    const badge = badgeFor(l.event_type);
+    return `<tr>
+      <td style="color:var(--text3);font-size:11px;font-family:monospace;">${t}</td>
+      <td><span class="badge ${badge.cls}">${l.event_type || '—'}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.content || '—'}</td>
+      <td>${l.action || '—'}</td>
+      <td style="color:var(--text3);">${l.source || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function badgeFor(type) {
+  if (!type) return { cls: 'badge-sys' };
+  if (type.includes('BLOCK'))   return { cls: 'badge-block' };
+  if (type.includes('DETECT'))  return { cls: 'badge-warn' };
+  if (type.includes('LOCK'))    return { cls: 'badge-lock' };
+  return { cls: 'badge-sys' };
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────────────────
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:'#888', font:{ size:11 } } } },
+  scales:{ x:{ ticks:{color:'#555'}, grid:{color:'rgba(255,255,255,.04)'} },
+           y:{ ticks:{color:'#555'}, grid:{color:'rgba(255,255,255,.04)'} } }
+};
+
+function drawTodayChart(stats) {
+  const ctx = document.getElementById('chartToday');
+  if (!ctx) return;
+  if (charts.today) charts.today.destroy();
+  charts.today = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Blocked','Detected','App Block','Focus Lock','Unlocked'],
+      datasets: [{
+        data: [stats.BLOCK||0, stats.DETECTION||0, stats.APP_BLOCKED||0, stats.FOCUS_LOCK||0, stats.FOCUS_UNLOCK||0],
+        backgroundColor: ['#FF444466','#FFC10766','#4FC3F766','#4CAF5066','#88888866'],
+        borderColor:     ['#FF4444',  '#FFC107',  '#4FC3F7',  '#4CAF50',  '#888888'],
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: { ...CHART_DEFAULTS, plugins:{ legend:{ display:false } } }
+  });
+}
+
+function drawTypesChart(stats) {
+  const ctx = document.getElementById('chartTypes');
+  if (!ctx) return;
+  if (charts.types) charts.types.destroy();
+  const keys = Object.keys(stats).filter(k => stats[k] > 0);
+  if (!keys.length) return;
+  charts.types = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: keys,
+      datasets: [{
+        data: keys.map(k => stats[k]),
+        backgroundColor: ['#FF444480','#FFC10780','#4FC3F780','#4CAF5080','#88888880','#BB86FC80'],
+        borderColor: '#0f0f1e', borderWidth: 2
+      }]
+    },
+    options: { ...CHART_DEFAULTS, scales:{} }
+  });
+}
+
+async function loadAnalytics() {
+  try {
+    const [daily, hourly, lang, weekly] = await Promise.all([
+      fetch(`${API}/analytics/daily`).then(r=>r.json()).catch(()=>null),
+      fetch(`${API}/analytics/hourly`).then(r=>r.json()).catch(()=>null),
+      fetch(`${API}/analytics/languages`).then(r=>r.json()).catch(()=>null),
+      fetch(`${API}/analytics/weekly`).then(r=>r.json()).catch(()=>null),
+    ]);
+    if (weekly) drawWeeklyChart(weekly);
+    if (lang)   drawLangChart(lang);
+    if (hourly) drawHourlyChart(hourly);
+    if (daily)  draw30dChart(daily);
+  } catch(e) { console.warn('Analytics load failed', e); }
+}
+
+function drawWeeklyChart(d) {
+  const ctx = document.getElementById('chartWeekly');
+  if (!ctx) return;
+  if (charts.weekly) charts.weekly.destroy();
+  charts.weekly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: d.days || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+      datasets: [{
+        label: 'Events',
+        data: d.counts || [],
+        backgroundColor: '#FF444455', borderColor: '#FF4444',
+        borderWidth:1, borderRadius:4
+      }]
+    },
+    options: { ...CHART_DEFAULTS, plugins:{ legend:{ display:false } } }
+  });
+}
+
+function drawLangChart(d) {
+  const ctx = document.getElementById('chartLang');
+  if (!ctx) return;
+  if (charts.lang) charts.lang.destroy();
+  const langs = d.languages || {};
+  charts.lang = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['English','Tamil','Tanglish'],
+      datasets: [{
+        data: [langs.English||0, langs.Tamil||0, langs.Tanglish||0],
+        backgroundColor: ['#FF444480','#4CAF5080','#4FC3F780'],
+        borderColor: '#0f0f1e', borderWidth: 2
+      }]
+    },
+    options: { ...CHART_DEFAULTS, scales:{} }
+  });
+}
+
+function drawHourlyChart(d) {
+  const ctx = document.getElementById('chartHourly');
+  if (!ctx) return;
+  if (charts.hourly) charts.hourly.destroy();
+  const hours = Array.from({length:24}, (_,i) => `${i}h`);
+  charts.hourly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: hours,
+      datasets: [{
+        label: 'Events',
+        data: d.hours || Array(24).fill(0),
+        backgroundColor: '#4FC3F740', borderColor: '#4FC3F7',
+        borderWidth:1, borderRadius:2
+      }]
+    },
+    options: { ...CHART_DEFAULTS, plugins:{ legend:{ display:false } } }
+  });
+}
+
+function draw30dChart(d) {
+  const ctx = document.getElementById('chart30d');
+  if (!ctx) return;
+  if (charts.d30) charts.d30.destroy();
+  const days   = (d.days||[]).map(x=>x.label||x.date);
+  const blocks = (d.days||[]).map(x=>x.BLOCK||0);
+  const warns  = (d.days||[]).map(x=>x.DETECTION||0);
+  charts.d30 = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Blocked', data:blocks, borderColor:'#FF4444', backgroundColor:'#FF444415', fill:true, tension:.3, pointRadius:2 },
+        { label:'Warned',  data:warns,  borderColor:'#FFC107', backgroundColor:'#FFC10715', fill:true, tension:.3, pointRadius:2 }
+      ]
+    },
+    options: CHART_DEFAULTS
+  });
+}
+
+// ── ACTIONS ────────────────────────────────────────────────────────────────
+async function manualBlock() {
+  await fetch(`${API}/block`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ reason:'Manually triggered from dashboard', source:'dashboard' })
+  }).catch(()=>{});
+}
+
+async function manualUnblock() {
+  await fetch(`${API}/unblock`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ source:'dashboard' })
+  }).catch(()=>{});
+}
+
+async function exportLogs() {
+  try {
+    const r = await fetch(`${API}/logs?limit=10000`);
+    const d = await r.json();
+    const csv = ['Timestamp,Type,Content,Action,Source',
+      ...d.logs.map(l => `"${l.timestamp}","${l.event_type}","${l.content||''}","${l.action||''}","${l.source||''}"`)
+    ].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv,' + encodeURIComponent(csv);
+    a.download = `aurasafe_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  } catch(e) { alert('Failed to export logs'); }
+}
+
+// ── FOCUS MODE ─────────────────────────────────────────────────────────────
+function startFocus() {
+  const mins   = parseInt(document.getElementById('focusDuration').value) || 25;
+  const reason = document.getElementById('focusReason').value || 'Focus Mode';
+  focusSeconds = mins * 60;
+
+  document.getElementById('btnStartFocus').disabled = true;
+  document.getElementById('btnStopFocus').disabled  = false;
+  document.getElementById('focusStatus').textContent = 'Focus session active…';
+
+  fetch(`${API}/lock`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ reason })
+  }).catch(()=>{});
+
+  focusInterval = setInterval(() => {
+    focusSeconds--;
+    const m = String(Math.floor(focusSeconds/60)).padStart(2,'0');
+    const s = String(focusSeconds%60).padStart(2,'0');
+    document.getElementById('focusTimer').textContent = `${m}:${s}`;
+    if (focusSeconds <= 0) stopFocus();
+  }, 1000);
+}
+
+function stopFocus() {
+  clearInterval(focusInterval);
+  document.getElementById('btnStartFocus').disabled = false;
+  document.getElementById('btnStopFocus').disabled  = true;
+  document.getElementById('focusStatus').textContent = 'Session ended';
+  const pin = prompt('Enter PIN to unlock focus mode:') || '';
+  fetch(`${API}/unlock`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ pin })
+  }).catch(()=>{});
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const r = await fetch(`${API}/keywords`);
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('kwEnglish').value  = (d.english  ||[]).join('\n');
+      document.getElementById('kwTanglish').value = (d.tanglish ||[]).join('\n');
+      document.getElementById('kwTamil').value    = (d.tamil    ||[]).join('\n');
+    }
+  } catch(e) {}
+}
+
+async function loadKeywords() { loadSettings(); }
+
+async function saveKeywords() {
+  const english  = document.getElementById('kwEnglish').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tanglish = document.getElementById('kwTanglish').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tamil    = document.getElementById('kwTamil').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  try {
+    const r = await fetch(`${API}/save_keywords`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ english, tanglish, tamil })
+    });
+    const d = await r.json();
+    alert(d.ok ? '✅ Keywords saved and synced to extension.' : '❌ Failed to save.');
+  } catch(e) { alert('❌ Backend not reachable.'); }
+}
+
+async function saveSettings() {
+  const pin  = document.getElementById('setPIN').value;
+  const port = document.getElementById('setPort').value;
+  try {
+    const r = await fetch(`${API}/save_settings`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ pin: pin||undefined, port: port ? parseInt(port) : undefined })
+    });
+    const d = await r.json();
+    alert(d.ok ? '✅ Settings saved.' : '❌ Failed.');
+  } catch(e) { alert('❌ Backend not reachable.'); }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+pollStatus();
+loadStats();
+loadRecentLogs();
+setInterval(()=>{ pollStatus(); loadStats(); loadRecentLogs(); }, 3000);
+</script>
+</body>
+</html>
