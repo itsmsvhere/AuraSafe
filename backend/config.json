@@ -9,22 +9,66 @@
     "case_sensitive": false,
     "normalize": true,
     "english_keywords": [
-      "porn", "xxx", "nude", "naked", "nsfw", "sex", "adult content",
-      "hate", "kill", "murder", "rape", "drug", "cocaine", "heroin",
-      "gambling", "bet now", "casino", "self harm", "suicide",
-      "explicit", "18+", "escort", "onlyfans"
+      "porn",
+      "xxx",
+      "nude",
+      "naked",
+      "nsfw",
+      "sex",
+      "adult content",
+      "hate",
+      "kill",
+      "murder",
+      "rape",
+      "drug",
+      "cocaine",
+      "heroin",
+      "gambling",
+      "bet now",
+      "casino",
+      "self harm",
+      "suicide",
+      "explicit",
+      "18+",
+      "escort",
+      "onlyfans",
+      "asshole",
+      "assholes",
+      "bitch",
+      "bitches",
+      "dick",
+      "dicks",
+      "blowjob",
+      "handjob"
     ],
     "tamil_keywords": [
-      "ஆபாசம்", "வன்முறை", "கொலை", "போதை", "சூதாட்டம்"
+      "ஆபாசம்",
+      "வன்முறை",
+      "கொலை",
+      "போதை",
+      "சூதாட்டம்"
     ],
     "tanglish_keywords": [
-      "punda", "otha", "koothi", "sunni", "sappi", "thevidiya",
-      "loosu", "thevdiya", "naaye", "poda", "thayoli"
+      "punda",
+      "otha",
+      "koothi",
+      "sunni",
+      "sappi",
+      "thevidiya",
+      "loosu",
+      "thevdiya",
+      "naaye",
+      "poda",
+      "thayoli"
     ]
   },
   "restricted_apps": [
-    "steam.exe", "epicgameslauncher.exe", "leagueoflegends.exe",
-    "vlc.exe", "mpc-hc64.exe", "potplayer.exe"
+    "steam.exe",
+    "epicgameslauncher.exe",
+    "leagueoflegends.exe",
+    "vlc.exe",
+    "mpc-hc64.exe",
+    "potplayer.exe"
   ],
   "overlay": {
     "warning_color": "#FF4444",
